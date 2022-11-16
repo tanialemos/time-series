@@ -1,4 +1,5 @@
 import gradio as gr
+from forecast import optimizer
 
 year_list = [*range(2000, 2023)] # using unpacking operator 
 month_list = [*range(1,13)]
@@ -10,7 +11,7 @@ etf_tickers = ["SPY", "IWM", "QQQ", "DIA", "GLD"]
 with gr.Blocks() as demo:
     error_box = gr.Textbox(label="Error", visible=False)
 
-    gr.Markdown("Please choose at least one ticker symbol:")
+    gr.Markdown("Please choose at least two ticker symbol:")
     with gr.Row():
         with gr.Column():
             stock_tickers = gr.CheckboxGroup(label="Stocks", choices=stock_tickers)
@@ -39,8 +40,9 @@ with gr.Blocks() as demo:
 
     def submit(stock_tickers, etf_tickers, start_year, start_month, start_day, end_year, end_month, end_day):
         # check if tickers were selected
-        if len(stock_tickers) == 0 and len(etf_tickers) == 0:
-            return {error_box: gr.update(value="Select at least one ticker", visible=True)}
+        selected_tickers = stock_tickers + etf_tickers
+        if len(selected_tickers) <=  1:
+            return {error_box: gr.update(value="Select at least two ticker", visible=True)}
 
         # formatting input data
         selected_tickers = stock_tickers + etf_tickers
@@ -53,6 +55,8 @@ with gr.Blocks() as demo:
             message = message + ticker + ", "
 
         message = message + f'from {start_date} to {end_date}.'
+
+        optimizer.optimize(selected_tickers, start_date, end_date)
 
         return {
             output_row: gr.update(visible=True),
